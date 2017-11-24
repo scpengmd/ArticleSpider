@@ -111,7 +111,7 @@ class ZhihuSpider(scrapy.Spider):
             answer_item["update_time"] = answer["updated_time"]
             answer_item["create_time"] = answer["created_time"]
             answer_item["crawl_time"] = datetime.datetime.now()
-            yield answer_item#githubtest
+            yield answer_item#githubtestsss
 
         if not is_end:
             yield scrapy.Request(next_url, headers=self.header, callback=self.parse_answer)
