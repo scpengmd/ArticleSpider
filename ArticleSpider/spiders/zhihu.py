@@ -36,10 +36,12 @@ class ZhihuSpider(scrapy.Spider):
         all_urls = [parse.urljoin(response.url, url) for url in all_urls]
         all_urls = filter(lambda x:True if x.startswith("https") else False, all_urls)
         for url in all_urls:
+            print(url)
             match_obj = re.match("(.*zhihu.com/question/(\d+))(/|$).*", url)
             if match_obj:
                 #如果提取到question相关的页面则下载后交由提取函数进行提取
                 request_url = match_obj.group(1)
+                question_id = match_obj.group(2)
                 yield scrapy.Request(request_url, headers=self.header, callback=self.parse_question)
                 break
             else:
@@ -48,7 +50,7 @@ class ZhihuSpider(scrapy.Spider):
                 # pass
 
 
-    def parse_question(self, response):          #self.parse的下一步就是这个self.parse.detail
+    def parse_question(self, response):
         #处理quetion页面，从页面中提取出具体的question item
 
         if "QuestionHeader-title" in response.text:
@@ -59,14 +61,14 @@ class ZhihuSpider(scrapy.Spider):
                 question_id = int(match_obj.group(2))
 
             item_loader = ItemLoader(item=ZhihuQuestionItem(), response=response)
-            item_loader.add_css("title", "h1.QuetionHeader-title::text")
-            item_loader.add_css("content", ".QuestionHeader-detail")
+            item_loader.add_css("title", "h1.QuestionHeader-title::text") #['你见过最上进的人是怎样的？']
+            item_loader.add_css("content", ".QuestionHeader-detail span::text") #['镜像问题:', '看别人的短处固然能...']
             item_loader.add_value("url", response.url)
             item_loader.add_value("zhihu_id", question_id)
-            item_loader.add_css("answer_num", ".List-headerText span::text")
-            item_loader.add_css("comments_num", ".QuestionHeader-actions button::text")
-            item_loader.add_css("watch_user_num", ".NumberBoard-value::text")
-            item_loader.add_css("topics", ".QuestionHeader-topics .Popover::text")
+            item_loader.add_css("answer_num", ".List-headerText span::text") #['713', ' 个回答']
+            item_loader.add_css("comments_num", ".QuestionHeader-Comment button::text") #['13 条评论']
+            item_loader.add_css("watch_user_num", ".NumberBoard-value::text") #['36820', '9094813']
+            item_loader.add_css("topics", "'.QuestionHeader-topics .Popover div::text'") #['职业发展', '生活经历', '职业规划', '社会', '个人成长']
 
             question_item = item_loader.load_item()
 
@@ -111,7 +113,7 @@ class ZhihuSpider(scrapy.Spider):
             answer_item["update_time"] = answer["updated_time"]
             answer_item["create_time"] = answer["created_time"]
             answer_item["crawl_time"] = datetime.datetime.now()
-            yield answer_item#githubtestsss
+            yield answer_item
 
         if not is_end:
             yield scrapy.Request(next_url, headers=self.header, callback=self.parse_answer)
