@@ -58,7 +58,7 @@ class ZhihuSpider(scrapy.Spider):
             #新版本样式：https://www.zhihu.com/question/55939030
             match_obj = re.match("(.*zhihu.com/question/(\d+))(/|$).*", response.url)
             if match_obj:
-                question_id = int(match_obj.group(2))
+                question_id = match_obj.group(2)
 
             item_loader = ItemLoader(item=ZhihuQuestionItem(), response=response)
             item_loader.add_css("title", "h1.QuestionHeader-title::text") #['你见过最上进的人是怎样的？']
@@ -68,12 +68,13 @@ class ZhihuSpider(scrapy.Spider):
             item_loader.add_css("answer_num", ".List-headerText span::text") #['713', ' 个回答']
             item_loader.add_css("comments_num", ".QuestionHeader-Comment button::text") #['13 条评论']
             item_loader.add_css("watch_user_num", ".NumberBoard-value::text") #['36820', '9094813']
-            item_loader.add_css("topics", "'.QuestionHeader-topics .Popover div::text'") #['职业发展', '生活经历', '职业规划', '社会', '个人成长']
-
+            item_loader.add_css("topics", ".QuestionHeader-topics .Popover div::text") #['职业发展', '生活经历', '职业规划', '社会', '个人成长']
             question_item = item_loader.load_item()
+            pass# 2017/11/25 15.:06
 
         else:
             #处理旧版本
+            #旧版本样式：https://www.zhihu.com/question/55939030/answer/147357004
             match_obj = re.match("(.*zhihu.com/question/(\d+))(/|$).*", response.url)
             if match_obj:
                 question_id = int(match_obj.group(2))
@@ -83,12 +84,13 @@ class ZhihuSpider(scrapy.Spider):
             item_loader.add_css("content", ".QuestionHeader-detail")
             item_loader.add_value("url", response.url)
             item_loader.add_value("zhihu_id", question_id)
-            item_loader.add_css("answer_num", ".List-headerText span::text")
+            item_loader.add_css("answer_num", ".QuestionMainAction::text") #['查看全部 719 个回答', '查看全部 719 个回答']其它跟新版一样
             item_loader.add_css("comments_num", ".QuestionHeader-actions button::text")
             item_loader.add_css("watch_user_num", ".NumberBoard-value::text")
             item_loader.add_css("topics", ".QuestionHeader-topics .Popover::text")
 
             question_item = item_loader.load_item()
+            pass
 
         yield scrapy.Request(self.start_answer_url.format(question_id, 20, 0), headers=self.header, callback=self.parse_answer)
         yield question_item
