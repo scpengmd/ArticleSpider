@@ -46,8 +46,8 @@ class ZhihuSpider(scrapy.Spider):
                 break
             else:
                 #如果不是qustion页面则直接进一步跟踪
-                yield scrapy.Request(url, headers=self.header, callback=self.parse)
-                # pass
+                # yield scrapy.Request(url, headers=self.header, callback=self.parse)
+                pass
 
 
     def parse_question(self, response):
@@ -92,7 +92,7 @@ class ZhihuSpider(scrapy.Spider):
             question_item = item_loader.load_item()
             pass
 
-        yield scrapy.Request(self.start_answer_url.format(question_id, 20, 0), headers=self.header, callback=self.parse_answer)
+        yield scrapy.Request(self.start_answer_url.format(question_id, 3, 20), headers=self.header, callback=self.parse_answer)
         yield question_item
 
 
